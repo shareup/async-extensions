@@ -13,7 +13,11 @@ To use AsyncExtensions, add a dependency to your Package.swift file:
 ```swift
 let package = Package(
   dependencies: [
-    .package(url: "https://github.com/shareup/async-extensions.git", .upToNextMajor(from: "1.0.0"))
+    .package(
+      name: "AsyncExtensions",
+      url: "https://github.com/shareup/async-extensions.git",
+      from: "1.0.0"
+    )
   ]
 )
 ```
