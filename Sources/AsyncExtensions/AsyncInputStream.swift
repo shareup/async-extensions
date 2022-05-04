@@ -46,7 +46,8 @@ public actor AsyncInputStream {
         }
 
         if buffer.count < len {
-            buffer.reserveCapacity(len)
+            let diff = len - buffer.count
+            buffer.append(contentsOf: [UInt8](repeating: 0, count: diff))
         }
 
         buffer.resetBytes(in: 0..<buffer.count)
