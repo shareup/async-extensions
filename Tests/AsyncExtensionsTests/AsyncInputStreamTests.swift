@@ -76,6 +76,18 @@ final class AsyncInputStreamTests: XCTestCase {
         XCTAssertEqual(Array(data[firstSize...]), second)
     }
 
+    func testReadReallyReallyLongData() async throws {
+        let size = 8 * 1024 * 1024
+        let data = Data([UInt8](repeating: 127, count: size))
+
+        let stream = AsyncInputStream(data: data)
+
+        let first = try await stream.read(maxLength: 4 * 1024 * 1024)
+        let second = try await stream.read(maxLength: 4 * 1024 * 1024)
+
+        XCTAssertEqual(first, second)
+    }
+
     func testReadUInt8() async throws {
         // 0b0111
         let value: UInt8 = 7

@@ -2,7 +2,6 @@ import Foundation
 
 public actor AsyncInputStream {
     private let stream: InputStream
-    private var buffer: [UInt8] = .init(repeating: 0, count: 128 * 1024)
 
     public init(url: URL) throws {
         guard let stream = InputStream(url: url)
@@ -45,13 +44,7 @@ public actor AsyncInputStream {
             throw AsyncInputStreamError.closed
         }
 
-        if buffer.count < len {
-            let diff = len - buffer.count
-            buffer.append(contentsOf: [UInt8](repeating: 0, count: diff))
-        }
-
-        buffer.resetBytes(in: 0..<buffer.count)
-
+        var buffer = [UInt8](repeating: 0, count: len)
         let bytesRead = stream.read(&buffer, maxLength: len)
         switch bytesRead {
         case -1:
@@ -63,7 +56,8 @@ public actor AsyncInputStream {
             return nil
 
         default:
-            return Array(buffer[0..<bytesRead])
+            buffer.removeLast(len - bytesRead)
+            return buffer
         }
     }
 }
