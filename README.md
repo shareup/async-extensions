@@ -16,7 +16,7 @@ let package = Package(
     .package(
       name: "AsyncExtensions",
       url: "https://github.com/shareup/async-extensions.git",
-      from: "1.0.0"
+      from: "1.0.3"
     )
   ]
 )
