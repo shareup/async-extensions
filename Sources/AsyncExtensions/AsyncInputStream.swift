@@ -1,18 +1,36 @@
 import Foundation
 
-public actor AsyncInputStream {
-    private let stream: InputStream
+public final class AsyncInputStream {
 
-    public init(url: URL) throws {
+    // 16 KiB
+    // Modeled after https://github.com/apple/swift-async-algorithms/blob/a973b06d06f2be355c562ec3ce031373514b03f5/Sources/AsyncAlgorithms/AsyncBufferedByteIterator.swift#L34
+    private static let defaultMaxChunkSize: Int = 16 * 1024
+
+    private let stream: InputStream
+    private let maxChunkSize: Int
+
+    public convenience init(url: URL) throws {
+        try self.init(url: url, maxChunkSize: Self.defaultMaxChunkSize)
+    }
+
+    public convenience init(data: Data) {
+        self.init(data: data, maxChunkSize: Self.defaultMaxChunkSize)
+    }
+
+    internal init(url: URL, maxChunkSize: Int) throws {
         guard let stream = InputStream(url: url)
         else { throw AsyncInputStreamError.couldNotOpenURL(url) }
 
         self.stream = stream
+        self.maxChunkSize = maxChunkSize
+
         self.stream.open()
     }
 
-    public init(data: Data) {
+    internal init(data: Data, maxChunkSize: Int) {
         stream = InputStream(data: data)
+        self.maxChunkSize = maxChunkSize
+
         stream.open()
     }
 
@@ -26,9 +44,9 @@ public actor AsyncInputStream {
         }
     }
 
-    public func read<I: FixedWidthInteger>() throws -> I {
+    public func read<I: FixedWidthInteger>() async throws -> I {
         let size = MemoryLayout<I>.size
-        let bytes = try read(maxLength: size)
+        let bytes = try await read(maxLength: size)
         guard let bytes = bytes, bytes.count == size else {
             throw AsyncInputStreamError.couldNotReadFixedWidthInteger(size)
         }
@@ -39,25 +57,69 @@ public actor AsyncInputStream {
         return output
     }
 
-    public func read(maxLength len: Int) throws -> [UInt8]? {
+    public func read(maxLength len: Int) async throws -> [UInt8]? {
+        guard len > 0 else { return nil }
+
         if case .closed = stream.streamStatus {
             throw AsyncInputStreamError.closed
         }
 
-        var buffer = [UInt8](repeating: 0, count: len)
-        let bytesRead = stream.read(&buffer, maxLength: len)
-        switch bytesRead {
-        case -1:
-            stream.close()
-            throw stream.streamError ?? AsyncInputStreamError.unknown
+        let task: Task<[UInt8]?, Error> = Task {
+            var buffer = [UInt8](repeating: 0, count: len)
+            var totalBytesRead = 0
+            var shouldStop = false
 
-        case 0:
-            stream.close()
-            return nil
+            repeat {
+                guard !Task.isCancelled else {
+                    throw CancellationError()
+                }
 
-        default:
-            buffer.removeLast(len - bytesRead)
-            return buffer
+                let chunkSize = min(len - totalBytesRead, self.maxChunkSize)
+
+                let bytesRead = await self._read(
+                    chunkSize: chunkSize,
+                    offset: totalBytesRead,
+                    into: &buffer
+                )
+
+                switch bytesRead {
+                case -1:
+                    self.stream.close()
+                    throw self.stream.streamError ?? AsyncInputStreamError.unknown
+
+                case 0:
+                    shouldStop = true
+
+                default:
+                    totalBytesRead += bytesRead
+
+                    if bytesRead < chunkSize {
+                        shouldStop = true
+                    }
+                }
+
+            } while !shouldStop && len > totalBytesRead
+
+            if totalBytesRead > 0 {
+                buffer.removeLast(len - totalBytesRead)
+                return buffer
+            } else {
+                stream.close()
+                return nil
+            }
+        }
+
+        return try await task.value
+    }
+
+    private func _read(
+        chunkSize: Int,
+        offset: Int,
+        into buffer: UnsafeMutablePointer<UInt8>
+    ) async -> Int {
+        await withUnsafeContinuation { (cont: UnsafeContinuation<Int, Never>) in
+            let bytesRead = stream.read(buffer.advanced(by: offset), maxLength: chunkSize)
+            cont.resume(returning: bytesRead)
         }
     }
 }
@@ -66,6 +128,7 @@ public enum AsyncInputStreamError: Error, Equatable {
     case closed
     case couldNotOpenURL(URL)
     case couldNotReadFixedWidthInteger(Int)
+    case invalidBufferPointer
     case unknown
 }
 

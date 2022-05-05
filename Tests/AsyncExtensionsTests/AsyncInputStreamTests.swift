@@ -2,6 +2,16 @@ import XCTest
 @testable import AsyncExtensions
 
 final class AsyncInputStreamTests: XCTestCase {
+    func testReadMaxLengthOfZero() async throws {
+        let stream = AsyncInputStream(data: Data("Hello!".utf8))
+
+        let first = try await stream.read(maxLength: 0)
+        XCTAssertNil(first)
+
+        let second = try await stream.read(maxLength: 0)
+        XCTAssertNil(second)
+    }
+
     func testReadMaxLengthWithData() async throws {
         let stream = AsyncInputStream(data: Data("Hello!".utf8))
 
@@ -86,6 +96,29 @@ final class AsyncInputStreamTests: XCTestCase {
         let second = try await stream.read(maxLength: 4 * 1024 * 1024)
 
         XCTAssertEqual(first, second)
+    }
+
+    func testMaxChunkSize() async throws {
+        let data: Data = Data([0, 1, 2, 3, 4])
+        XCTAssertEqual(5, data.count)
+
+        let fiveBytes = AsyncInputStream(data: data, maxChunkSize: 5)
+        let fiveBytes1 = try await fiveBytes.read(maxLength: 5)
+        XCTAssertEqual(data, Data(fiveBytes1!))
+        let fiveBytes2 = try await fiveBytes.read(maxLength: 5)
+        XCTAssertNil(fiveBytes2)
+
+        let fourBytes = AsyncInputStream(data: data, maxChunkSize: 4)
+        let fourBytes1 = try await fourBytes.read(maxLength: 5)
+        XCTAssertEqual(data, Data(fourBytes1!))
+        let fourBytes2 = try await fourBytes.read(maxLength: 5)
+        XCTAssertNil(fourBytes2)
+
+        let sixBytes = AsyncInputStream(data: data, maxChunkSize: 6)
+        let sixBytes1 = try await sixBytes.read(maxLength: 5)
+        XCTAssertEqual(data, Data(sixBytes1!))
+        let sixBytes2 = try await sixBytes.read(maxLength: 5)
+        XCTAssertNil(sixBytes2)
     }
 
     func testReadUInt8() async throws {
