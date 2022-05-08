@@ -59,6 +59,20 @@ public func AssertNil(
     }
 }
 
+public func AssertNotNil(
+    _ expression: @autoclosure () async throws -> Any?,
+    _ message: @autoclosure () -> String = "",
+    file: StaticString = #filePath,
+    line: UInt = #line
+) async {
+    do {
+        let expr = try await expression()
+        XCTAssertNotNil(expr, message(), file: file, line: line)
+    } catch {
+        XCTFail("\(message()): \(String(describing: error))", file: file, line: line)
+    }
+}
+
 public func AssertThrowsError<T>(
     _ expression: @autoclosure () async throws -> T,
     _ message: @autoclosure () -> String = "",
@@ -71,5 +85,18 @@ public func AssertThrowsError<T>(
         XCTFail(message(), file: file, line: line)
     } catch {
         errorHandler(error)
+    }
+}
+
+public func AssertNoThrow<T>(
+    _ expression: @autoclosure () async throws -> T,
+    _ message: @autoclosure () -> String = "",
+    file: StaticString = #filePath,
+    line: UInt = #line
+) async {
+    do {
+        let _ = try await expression()
+    } catch {
+        XCTFail("\(message()): \(String(describing: error))", file: file, line: line)
     }
 }

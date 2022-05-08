@@ -14,7 +14,9 @@ The AsyncExtensions package also inlcudes the AsyncTestExtensions target, which 
 - `AssertTrue()`
 - `AssertFalse()`
 - `AssertNil()`
+- `AssertNotNil()`
 - `AssertThrowsError()`
+- `AssertNoThrow()`
 
 ## Installation
 
