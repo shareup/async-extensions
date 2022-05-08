@@ -11,6 +11,9 @@ let package = Package(
         .library(
             name: "AsyncExtensions",
             targets: ["AsyncExtensions"]),
+        .library(
+            name: "AsyncTestExtensions",
+            targets: ["AsyncTestExtensions"]),
     ],
     dependencies: [],
     targets: [
@@ -19,6 +22,10 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "AsyncExtensionsTests",
-            dependencies: ["AsyncExtensions"]),
+            dependencies: ["AsyncExtensions", "AsyncTestExtensions"]),
+
+            .target(
+                name: "AsyncTestExtensions",
+                dependencies: []),
     ]
 )
