@@ -1,7 +1,6 @@
 import Foundation
 
 public final class AsyncInputStream {
-
     // 16 KiB
     // Modeled after https://github.com/apple/swift-async-algorithms/blob/a973b06d06f2be355c562ec3ce031373514b03f5/Sources/AsyncAlgorithms/AsyncBufferedByteIterator.swift#L34
     private static let defaultMaxChunkSize: Int = 16 * 1024
@@ -51,7 +50,7 @@ public final class AsyncInputStream {
             throw AsyncInputStreamError.couldNotReadFixedWidthInteger(size)
         }
         var output = I()
-        for i in 0..<size {
+        for i in 0 ..< size {
             output.uncheckedSetByte(at: i, to: bytes[i])
         }
         return output

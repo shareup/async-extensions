@@ -10,22 +10,27 @@ let package = Package(
     products: [
         .library(
             name: "AsyncExtensions",
-            targets: ["AsyncExtensions"]),
+            targets: ["AsyncExtensions"]
+        ),
         .library(
             name: "AsyncTestExtensions",
-            targets: ["AsyncTestExtensions"]),
+            targets: ["AsyncTestExtensions"]
+        ),
     ],
     dependencies: [],
     targets: [
         .target(
             name: "AsyncExtensions",
-            dependencies: []),
+            dependencies: []
+        ),
         .testTarget(
             name: "AsyncExtensionsTests",
-            dependencies: ["AsyncExtensions", "AsyncTestExtensions"]),
+            dependencies: ["AsyncExtensions", "AsyncTestExtensions"]
+        ),
 
-            .target(
-                name: "AsyncTestExtensions",
-                dependencies: []),
+        .target(
+            name: "AsyncTestExtensions",
+            dependencies: []
+        ),
     ]
 )
