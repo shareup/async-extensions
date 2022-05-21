@@ -81,7 +81,7 @@ public func AssertThrowsError<T>(
     _ errorHandler: (_ error: Error) -> Void = { _ in }
 ) async {
     do {
-        let _ = try await expression()
+        _ = try await expression()
         XCTFail(message(), file: file, line: line)
     } catch {
         errorHandler(error)
@@ -95,7 +95,7 @@ public func AssertNoThrow<T>(
     line: UInt = #line
 ) async {
     do {
-        let _ = try await expression()
+        _ = try await expression()
     } catch {
         XCTFail("\(message()): \(String(describing: error))", file: file, line: line)
     }

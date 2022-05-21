@@ -1,6 +1,6 @@
-import XCTest
 @testable import AsyncExtensions
 import AsyncTestExtensions
+import XCTest
 
 final class AsyncInputStreamTests: XCTestCase {
     func testReadMaxLengthOfZero() async throws {
@@ -18,7 +18,7 @@ final class AsyncInputStreamTests: XCTestCase {
         await AssertThrowsError(
             try await stream.read(maxLength: 99999),
             "Should have thrown an error after closing",
-            { XCTAssertEqual(.closed, ($0 as? AsyncInputStreamError)) }
+            { XCTAssertEqual(.closed, $0 as? AsyncInputStreamError) }
         )
     }
 
@@ -45,7 +45,7 @@ final class AsyncInputStreamTests: XCTestCase {
         await AssertThrowsError(
             try await stream.read(maxLength: 99999),
             "Should have thrown an error after closing",
-            { XCTAssertEqual(.closed, ($0 as? AsyncInputStreamError)) }
+            { XCTAssertEqual(.closed, $0 as? AsyncInputStreamError) }
         )
     }
 
@@ -81,7 +81,7 @@ final class AsyncInputStreamTests: XCTestCase {
     }
 
     func testMaxChunkSize() async throws {
-        let data: Data = Data([0, 1, 2, 3, 4])
+        let data = Data([0, 1, 2, 3, 4])
         XCTAssertEqual(5, data.count)
 
         let fiveBytes = AsyncInputStream(data: data, maxChunkSize: 5)
@@ -108,7 +108,7 @@ final class AsyncInputStreamTests: XCTestCase {
         await AssertThrowsError(
             try await stream.read() as UInt8,
             "Should have thrown an error after closing",
-            { XCTAssertEqual(.couldNotReadFixedWidthInteger(1), ($0 as? AsyncInputStreamError)) }
+            { XCTAssertEqual(.couldNotReadFixedWidthInteger(1), $0 as? AsyncInputStreamError) }
         )
     }
 
@@ -123,7 +123,7 @@ final class AsyncInputStreamTests: XCTestCase {
         await AssertThrowsError(
             try await stream.read() as UInt32,
             "Should have thrown an error after closing",
-            { XCTAssertEqual(.couldNotReadFixedWidthInteger(4), ($0 as? AsyncInputStreamError)) }
+            { XCTAssertEqual(.couldNotReadFixedWidthInteger(4), $0 as? AsyncInputStreamError) }
         )
     }
 
@@ -138,7 +138,7 @@ final class AsyncInputStreamTests: XCTestCase {
         await AssertThrowsError(
             try await stream.read() as UInt64,
             "Should have thrown an error after closing",
-            { XCTAssertEqual(.couldNotReadFixedWidthInteger(8), ($0 as? AsyncInputStreamError)) }
+            { XCTAssertEqual(.couldNotReadFixedWidthInteger(8), $0 as? AsyncInputStreamError) }
         )
     }
 }
