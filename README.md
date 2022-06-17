@@ -11,7 +11,9 @@ The AsyncExtensions package also inlcudes the AsyncTestExtensions target, which 
 ## AsyncTestExtensions includes
 
 - `AssertEqual()`
+- `AssertEqualEventually()`
 - `AssertTrue()`
+- `AssertTrueEventually()`
 - `AssertFalse()`
 - `AssertNil()`
 - `AssertNotNil()`
