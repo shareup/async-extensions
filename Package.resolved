@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "DispatchTimer",
+        "repositoryURL": "https://github.com/shareup/dispatch-timer.git",
+        "state": {
+          "branch": null,
+          "revision": "1ee29992f2412d946492dea7c28fb1890b8a8b7a",
+          "version": "2.0.1"
+        }
+      },
+      {
+        "package": "Synchronized",
+        "repositoryURL": "https://github.com/shareup/synchronized.git",
+        "state": {
+          "branch": null,
+          "revision": "ab58ad52ede004d65ee11b07aebb76392d9c0cec",
+          "version": "3.1.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
