@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+import DispatchTimer
 
 public func AssertEqual<T: Equatable>(
     _ expression1: @autoclosure () async throws -> T,
@@ -109,83 +110,59 @@ public func AssertEqualEventually<T: Equatable>(
     file: StaticString = #filePath,
     line: UInt = #line
 ) async {
-    do {
-        try await withThrowingTaskGroup(
-            of: Void.self
-        ) { (group: inout ThrowingTaskGroup<Void, Error>) in
-            _ = group.addTaskUnlessCancelled {
-                try await Task.sleep(nanoseconds: UInt64(timeout * Double(NSEC_PER_SEC)))
-                throw CancellationError()
-            }
+    let task = Task { () async throws -> (T, T) in
+        var expr1 = try await expression1()
+        var expr2 = try await expression2()
 
-            _ = group.addTaskUnlessCancelled {
-                var expr1 = try await expression1()
-                var expr2 = try await expression2()
+        while !Task.isCancelled, expr1 != expr2 {
+            try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 10)
 
-                while expr1 != expr2 {
-                    try await Task.sleep(nanoseconds: 10 * NSEC_PER_MSEC)
-
-                    expr1 = try await expression1()
-                    expr2 = try await expression2()
-                }
-
-                XCTAssertEqual(expr1, expr2, message(), file: file, line: line)
-            }
-
-            _ = try await group.next()
-            group.cancelAll()
+            expr1 = try await expression1()
+            expr2 = try await expression2()
         }
-    } catch is CancellationError {
-        do {
-            let expr1 = try await expression1()
-            let expr2 = try await expression2()
-            XCTAssertEqual(expr1, expr2, message(), file: file, line: line)
-        } catch {
-            XCTFail("\(message()): \(String(describing: error))", file: file, line: line)
-        }
-    } catch {
+        return (expr1, expr2)
+    }
+
+    let timer = DispatchTimer(
+        fireAt: .now() + .nanoseconds(Int(timeout * Double(NSEC_PER_SEC)))
+    ) { task.cancel() }
+    defer { timer.invalidate() }
+
+    switch await task.result {
+    case let .success((expr1, expr2)):
+        XCTAssertEqual(expr1, expr2, message(), file: file, line: line)
+
+    case let .failure(error):
         XCTFail("\(message()): \(String(describing: error))", file: file, line: line)
     }
 }
 
 public func AssertTrueEventually(
-    _ expression1: @escaping @autoclosure () async throws -> Bool,
+    _ expression: @escaping @autoclosure () async throws -> Bool,
     _ timeout: TimeInterval = 5,
     _ message: @escaping @autoclosure () -> String = "",
     file: StaticString = #filePath,
     line: UInt = #line
 ) async {
-    do {
-        try await withThrowingTaskGroup(
-            of: Void.self
-        ) { (group: inout ThrowingTaskGroup<Void, Error>) in
-            _ = group.addTaskUnlessCancelled {
-                try await Task.sleep(nanoseconds: UInt64(timeout * Double(NSEC_PER_SEC)))
-                throw CancellationError()
-            }
-
-            _ = group.addTaskUnlessCancelled {
-                var expr1 = try await expression1()
-
-                while !expr1 {
-                    try await Task.sleep(nanoseconds: 10 * NSEC_PER_MSEC)
-                    expr1 = try await expression1()
-                }
-
-                XCTAssertTrue(expr1, message(), file: file, line: line)
-            }
-
-            _ = try await group.next()
-            group.cancelAll()
+    let task = Task { () async throws -> Bool in
+        var expr = try await expression()
+        while !Task.isCancelled, !expr {
+            try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 10)
+            expr = try await expression()
         }
-    } catch is CancellationError {
-        do {
-            let expr1 = try await expression1()
-            XCTAssertTrue(expr1, message(), file: file, line: line)
-        } catch {
-            XCTFail("\(message()): \(String(describing: error))", file: file, line: line)
-        }
-    } catch {
+        return expr
+    }
+
+    let timer = DispatchTimer(
+        fireAt: .now() + .nanoseconds(Int(timeout * Double(NSEC_PER_SEC)))
+    ) { task.cancel() }
+    defer { timer.invalidate() }
+
+    switch await task.result {
+    case let .success(isTrue):
+        XCTAssertTrue(isTrue, message(), file: file, line: line)
+
+    case let .failure(error):
         XCTFail("\(message()): \(String(describing: error))", file: file, line: line)
     }
 }
