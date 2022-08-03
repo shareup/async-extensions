@@ -49,4 +49,6 @@ To use AsyncTestExtensions in a test target, add it as a dependency:
 
 ## License
 
-The license for Database is the standard MIT licence. You can find it in the LICENSE file.
+The license for AsyncExtensions is the standard MIT licence. You can find it in the LICENSE file.
+
+CombineAsyncStream was created by Marin Todorov. It was released on his blog at: https://trycombine.com/posts/combine-async-sequence-2/.

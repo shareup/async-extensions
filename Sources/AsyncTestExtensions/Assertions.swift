@@ -1,6 +1,6 @@
+import DispatchTimer
 import Foundation
 import XCTest
-import DispatchTimer
 
 public func AssertEqual<T: Equatable>(
     _ expression1: @autoclosure () async throws -> T,
