@@ -1,7 +1,7 @@
-import XCTest
 import AsyncExtensions
 import AsyncTestExtensions
 import Combine
+import XCTest
 
 final class CombineAsyncStreamTests: XCTestCase {
     func testWithNonThrowingPublisher() async throws {
@@ -38,5 +38,4 @@ final class CombineAsyncStreamTests: XCTestCase {
             XCTAssertEqual([1, 2], received)
         }
     }
-
 }

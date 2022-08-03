@@ -1,6 +1,6 @@
-import XCTest
 @testable import AsyncTestExtensions
 import Synchronized
+import XCTest
 
 final class AssertionsTests: XCTestCase {
     func testAssertEqual() async throws {
@@ -62,7 +62,7 @@ final class AssertionsTests: XCTestCase {
         let count = Locked(0)
         func bool() async -> Bool {
             let c = count.access { count -> Int in
-                defer { count += 1}
+                defer { count += 1 }
                 return count
             }
             return c == 5

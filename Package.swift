@@ -21,7 +21,7 @@ let package = Package(
         .package(
             url: "https://github.com/shareup/dispatch-timer.git",
             from: "2.0.1"
-        )
+        ),
     ],
     targets: [
         .target(
@@ -36,7 +36,7 @@ let package = Package(
         .target(
             name: "AsyncTestExtensions",
             dependencies: [
-                .product(name: "DispatchTimer", package: "dispatch-timer")
+                .product(name: "DispatchTimer", package: "dispatch-timer"),
             ]
         ),
         .testTarget(
