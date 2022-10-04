@@ -26,7 +26,7 @@ SOFTWARE.
 
 CombineAsyncStream was created by Marin Todorov. It was released on his blog at: https://trycombine.com/posts/combine-async-sequence-2/.
 
-# asyncMap License 
+# SequenceExtensions License 
 
 MIT License
 
