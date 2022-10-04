@@ -37,6 +37,6 @@ final class MapFunctionsTests: XCTestCase {
         async let asyncMapArray = [1, 2, 3].concurrentMap(square)
         let _ = try await asyncMapArray
         finalTime = Date().timeIntervalSince(initialTime)
-        await AssertTrueEventually(finalTime <= 1.1)
+        await AssertTrueEventually(finalTime < 1.1)
     }
  }
