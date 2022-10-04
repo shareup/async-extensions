@@ -2,7 +2,6 @@ import Foundation
 
 /// This function was taken from `CollectionConcurrencyKit` by John Sundell.
 /// https://github.com/JohnSundell/CollectionConcurrencyKit/blob/main/Sources/CollectionConcurrencyKit.swift
-///
 extension Sequence {
     func asyncMap<T>(
         _ transform: (Element) async throws -> T
