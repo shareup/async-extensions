@@ -1,42 +1,80 @@
 @testable import AsyncExtensions
 import AsyncTestExtensions
+import Synchronized
 import XCTest
 
 final class MapFunctionsTests: XCTestCase {
-    
-    private let square: (Int) async throws -> Int = {
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-        return $0 * $0
-    }
-    
     func testAsyncMapOnArray() async throws {
-        var initialTime = Date()
-        let _ = try await square(1)
-        let _ = try await square(2)
-        let _ = try await square(3)
-        var finalTime = Date().timeIntervalSince(initialTime)
-        await AssertTrueEventually(finalTime >= 3)
-    
-        initialTime = Date()
-        async let asyncMapArray = [1, 2, 3].asyncMap(square)
-        let _ = try await asyncMapArray
-        finalTime = Date().timeIntervalSince(initialTime)
-        await AssertTrueEventually(finalTime >= 3)
+        let square: (Int) async throws -> Int = {
+            try await Task.sleep(nanoseconds: 1_000_000)
+            return $0 * $0
+        }
+
+        let squares = try await [1, 2, 3].asyncMap(square)
+        XCTAssertEqual([1, 4, 9], squares)
     }
-    
+
     func testConcurrentMapOnArray() async throws {
-        var initialTime = Date()
-        async let one = square(1)
-        async let four = square(2)
-        async let nine = square(3)
-        let _ = try await [one, four, nine]
-        var finalTime = Date().timeIntervalSince(initialTime)
-        await AssertTrueEventually(finalTime < 1.1)
-        
-        initialTime = Date()
-        async let asyncMapArray = [1, 2, 3].concurrentMap(square)
-        let _ = try await asyncMapArray
-        finalTime = Date().timeIntervalSince(initialTime)
-        await AssertTrueEventually(finalTime < 1.1)
+        let square: (Int) async throws -> Int = {
+            try await Task.sleep(nanoseconds: 1_000_000)
+            return $0 * $0
+        }
+
+        let squares = try await [1, 2, 3].concurrentMap(square)
+        XCTAssertEqual([1, 4, 9], squares)
     }
- }
+
+    func testAsyncMapRunsTasksSerially() async throws {
+        struct TestState {
+            var concurrentTestCount = 0 {
+                didSet {
+                    if concurrentTestCount > 1 {
+                        didRunTestsConcurrently = true
+                    }
+                }
+            }
+
+            var didRunTestsConcurrently = false
+        }
+
+        let state = Locked(TestState())
+
+        let square: (Int) async throws -> Int = {
+            state.access { $0.concurrentTestCount += 1 }
+            defer { state.access { $0.concurrentTestCount -= 1 } }
+            try await Task.sleep(nanoseconds: 10_000_000)
+            return $0 * $0
+        }
+
+        let squares = try await [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].asyncMap(square)
+        XCTAssertEqual([1, 4, 9, 16, 25, 36, 49, 64, 81, 100], squares)
+        XCTAssertFalse(state.access { $0.didRunTestsConcurrently })
+    }
+
+    func testConcurrentMapRunsTasksConcurrently() async throws {
+        struct TestState {
+            var concurrentTestCount = 0 {
+                didSet {
+                    if concurrentTestCount > 1 {
+                        didRunTestsConcurrently = true
+                    }
+                }
+            }
+
+            var didRunTestsConcurrently = false
+        }
+
+        let state = Locked(TestState())
+
+        let square: (Int) async throws -> Int = {
+            state.access { $0.concurrentTestCount += 1 }
+            defer { state.access { $0.concurrentTestCount -= 1 } }
+            try await Task.sleep(nanoseconds: 10_000_000)
+            return $0 * $0
+        }
+
+        let squares = try await [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].concurrentMap(square)
+        XCTAssertEqual([1, 4, 9, 16, 25, 36, 49, 64, 81, 100], squares)
+        XCTAssertTrue(state.access { $0.didRunTestsConcurrently })
+    }
+}
