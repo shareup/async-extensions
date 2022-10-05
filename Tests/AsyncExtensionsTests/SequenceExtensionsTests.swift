@@ -4,26 +4,6 @@ import Synchronized
 import XCTest
 
 final class MapFunctionsTests: XCTestCase {
-    func testAsyncMapOnArray() async throws {
-        let square: (Int) async throws -> Int = {
-            try await Task.sleep(nanoseconds: 1_000_000)
-            return $0 * $0
-        }
-
-        let squares = try await [1, 2, 3].asyncMap(square)
-        XCTAssertEqual([1, 4, 9], squares)
-    }
-
-    func testConcurrentMapOnArray() async throws {
-        let square: (Int) async throws -> Int = {
-            try await Task.sleep(nanoseconds: 1_000_000)
-            return $0 * $0
-        }
-
-        let squares = try await [1, 2, 3].concurrentMap(square)
-        XCTAssertEqual([1, 4, 9], squares)
-    }
-
     func testAsyncMapRunsTasksSerially() async throws {
         struct TestState {
             var concurrentTestCount = 0 {
