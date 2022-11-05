@@ -1,25 +1,23 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "DispatchTimer",
-        "repositoryURL": "https://github.com/shareup/dispatch-timer.git",
-        "state": {
-          "branch": null,
-          "revision": "1ee29992f2412d946492dea7c28fb1890b8a8b7a",
-          "version": "2.0.1"
-        }
-      },
-      {
-        "package": "Synchronized",
-        "repositoryURL": "https://github.com/shareup/synchronized.git",
-        "state": {
-          "branch": null,
-          "revision": "ab58ad52ede004d65ee11b07aebb76392d9c0cec",
-          "version": "3.1.0"
-        }
+  "pins" : [
+    {
+      "identity" : "dispatch-timer",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/shareup/dispatch-timer.git",
+      "state" : {
+        "revision" : "7c233b28f54d3797a6e66d54aa342f1cfc05d8db",
+        "version" : "3.0.0"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "synchronized",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/shareup/synchronized.git",
+      "state" : {
+        "revision" : "3a07451bbd0933933804c7d9a92ef2fa57b6766f",
+        "version" : "4.0.0"
+      }
+    }
+  ],
+  "version" : 2
 }
