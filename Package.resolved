@@ -1,15 +1,6 @@
 {
   "pins" : [
     {
-      "identity" : "dispatch-timer",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/shareup/dispatch-timer.git",
-      "state" : {
-        "revision" : "7c233b28f54d3797a6e66d54aa342f1cfc05d8db",
-        "version" : "3.0.0"
-      }
-    },
-    {
       "identity" : "synchronized",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/shareup/synchronized.git",

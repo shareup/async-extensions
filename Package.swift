@@ -18,8 +18,8 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/shareup/dispatch-timer.git",
-            from: "3.0.0"
+            url: "https://github.com/shareup/synchronized.git",
+            .upToNextMajor(from: "4.0.0")
         ),
     ],
     targets: [
@@ -35,7 +35,7 @@ let package = Package(
         .target(
             name: "AsyncTestExtensions",
             dependencies: [
-                .product(name: "DispatchTimer", package: "dispatch-timer"),
+                .product(name: "Synchronized", package: "synchronized"),
             ]
         ),
         .testTarget(

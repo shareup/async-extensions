@@ -38,34 +38,23 @@ final class AssertionsTests: XCTestCase {
     }
 
     func testAssertEqualEventually() async throws {
-        let values = Locked((0, 4))
-        func one() async -> Int {
-            values.access { v in
-                let prev = v
-                v = (prev.0 + 1, prev.1)
-                return prev.0
-            }
-        }
+        let one = [7, 6, 5, 4].async
+        func first() async -> Int { await one.min()! }
 
-        func two() async -> Int {
-            values.access { v in
-                let prev = v
-                v = (prev.0, prev.1 - 1)
-                return prev.1
-            }
-        }
+        let two = [1, 2, 3, 4].async
+        func second() async -> Int { await two.max()! }
 
-        await AssertEqualEventually(await one(), await two())
+        await AssertEqualEventually(await first(), await second())
     }
 
     func testAssertTrueEventually() async throws {
-        let count = Locked(0)
+        let results = [false, false, false, true].async
         func bool() async -> Bool {
-            let c = count.access { count -> Int in
-                defer { count += 1 }
-                return count
+            for await result in results {
+                return result
             }
-            return c == 5
+            XCTFail("Should have stopped with the true result")
+            return false // should never be called
         }
         await AssertTrueEventually(await bool())
     }
@@ -77,8 +66,20 @@ private extension AssertionsTests {
         return value
     }
 
-    func delayedThrow<T: Error>(_ error: T) async throws {
+    func delayedThrow(_ error: some Error) async throws {
         try await Task.sleep(nanoseconds: 5 * NSEC_PER_MSEC)
         throw error
+    }
+}
+
+private extension Array where Element: Sendable {
+    var async: AsyncStream<Element> {
+        var copy = self
+        return AsyncStream { cont in
+            while !copy.isEmpty {
+                cont.yield(copy.removeFirst())
+            }
+            cont.finish()
+        }
     }
 }
