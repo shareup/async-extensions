@@ -1,6 +1,6 @@
 import Foundation
 
-/// These functions was taken from `CollectionConcurrencyKit` by John Sundell.
+/// These functions were inspired by `CollectionConcurrencyKit` by John Sundell.
 /// https://github.com/JohnSundell/CollectionConcurrencyKit/blob/main/Sources/CollectionConcurrencyKit.swift
 public extension Sequence {
     func asyncMap<T>(
@@ -16,10 +16,11 @@ public extension Sequence {
     }
 
     func concurrentMap<T>(
+        priority: TaskPriority? = nil,
         _ transform: @escaping (Element) async throws -> T
     ) async throws -> [T] {
         let tasks = map { element in
-            Task {
+            Task(priority: priority) {
                 try await transform(element)
             }
         }

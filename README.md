@@ -7,6 +7,10 @@ The AsyncExtensions package also inlcudes the AsyncTestExtensions target, which 
 ## AsyncExtensions includes
 
 - `AsyncInputStream`: A convenient wrapper around [`InputStream`](https://developer.apple.com/documentation/foundation/inputstream) allowing for simple, type-safe access to stream data.
+- `CombineAsyncStream`: A backported version of [`AsyncPublisher`](https://developer.apple.com/documentation/combine/asyncpublisher), which creates an `AsyncStream` from a Combine Publisher and is only supported on iOS 15+.
+- `Future`: A thread-safe implemention of a future that is useful when briding traditional Swift code with code employing Swift Concurrency.
+- `Sequence.asyncMap()` and `Sequence.concurrentMap()`: Extensions allowing for applying async transformations to `Sequence`.
+- `TimeoutError`: A simple error intending to represent a timeout. Modelled after [`CancellationError`](https://developer.apple.com/documentation/swift/cancellationerror).
 
 ## AsyncTestExtensions includes
 
@@ -28,9 +32,8 @@ To use AsyncExtensions, add a dependency to your Package.swift file:
 let package = Package(
   dependencies: [
     .package(
-      name: "AsyncExtensions",
       url: "https://github.com/shareup/async-extensions.git",
-      from: "1.1.0"
+      from: "2.0.0"
     )
   ]
 )
@@ -42,7 +45,7 @@ To use AsyncTestExtensions in a test target, add it as a dependency:
 .testTarget(
   name: "MyTests",
   dependencies: [
-    .product(name: "AsyncTestExtensions", package: "AsyncExtensions")
+    .product(name: "AsyncTestExtensions", package: "async-extensions")
   ]
 )
 ```
@@ -51,4 +54,6 @@ To use AsyncTestExtensions in a test target, add it as a dependency:
 
 The license for AsyncExtensions is the standard MIT licence. You can find it in the LICENSE file.
 
-CombineAsyncStream was created by Marin Todorov. It was released on his blog at: https://trycombine.com/posts/combine-async-sequence-2/.
+CombineAsyncStream was created by Marin Todorov. It was released on his blog at https://trycombine.com/posts/combine-async-sequence-2/.
+
+SequenceExtensions were heavily inspired by CollectionConcurrencyKit by John Sundell at https://github.com/JohnSundell/CollectionConcurrencyKit.
