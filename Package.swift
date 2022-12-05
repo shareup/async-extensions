@@ -17,7 +17,10 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/shareup/synchronized.git", .upToNextMajor(from: "4.0.0"))
+        .package(
+            url: "https://github.com/shareup/synchronized.git",
+            .upToNextMajor(from: "4.0.0")
+        ),
     ],
     targets: [
         .target(
@@ -32,7 +35,7 @@ let package = Package(
         .target(
             name: "AsyncTestExtensions",
             dependencies: [
-                .product(name: "Synchronized", package: "synchronized")
+                .product(name: "Synchronized", package: "synchronized"),
             ]
         ),
         .testTarget(

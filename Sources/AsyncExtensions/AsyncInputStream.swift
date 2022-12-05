@@ -46,7 +46,7 @@ public final class AsyncInputStream {
     public func read<I: FixedWidthInteger>() async throws -> I {
         let size = MemoryLayout<I>.size
         let bytes = try await read(maxLength: size)
-        guard let bytes = bytes, bytes.count == size else {
+        guard let bytes, bytes.count == size else {
             throw AsyncInputStreamError.couldNotReadFixedWidthInteger(size)
         }
         var output = I()

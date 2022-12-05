@@ -39,10 +39,10 @@ final class AssertionsTests: XCTestCase {
 
     func testAssertEqualEventually() async throws {
         let one = [7, 6, 5, 4].async
-        func first() async -> Int { return await one.min()! }
+        func first() async -> Int { await one.min()! }
 
         let two = [1, 2, 3, 4].async
-        func second() async -> Int { return await two.max()! }
+        func second() async -> Int { await two.max()! }
 
         await AssertEqualEventually(await first(), await second())
     }
@@ -66,7 +66,7 @@ private extension AssertionsTests {
         return value
     }
 
-    func delayedThrow<T: Error>(_ error: T) async throws {
+    func delayedThrow(_ error: some Error) async throws {
         try await Task.sleep(nanoseconds: 5 * NSEC_PER_MSEC)
         throw error
     }
@@ -76,7 +76,7 @@ private extension Array where Element: Sendable {
     var async: AsyncStream<Element> {
         var copy = self
         return AsyncStream { cont in
-            while (!copy.isEmpty) {
+            while !copy.isEmpty {
                 cont.yield(copy.removeFirst())
             }
             cont.finish()

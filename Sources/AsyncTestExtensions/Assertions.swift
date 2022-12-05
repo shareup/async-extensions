@@ -73,8 +73,8 @@ public func AssertNotNil(
     }
 }
 
-public func AssertThrowsError<T>(
-    _ expression: @autoclosure () async throws -> T,
+public func AssertThrowsError(
+    _ expression: @autoclosure () async throws -> some Any,
     _ message: @autoclosure () -> String = "",
     file: StaticString = #filePath,
     line: UInt = #line,
@@ -88,8 +88,8 @@ public func AssertThrowsError<T>(
     }
 }
 
-public func AssertNoThrow<T>(
-    _ expression: @autoclosure () async throws -> T,
+public func AssertNoThrow(
+    _ expression: @autoclosure () async throws -> some Any,
     _ message: @autoclosure () -> String = "",
     file: StaticString = #filePath,
     line: UInt = #line
