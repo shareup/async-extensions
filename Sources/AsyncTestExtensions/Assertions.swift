@@ -112,15 +112,16 @@ public func AssertEqualEventually<T: Equatable>(
     let result = await withTaskGroup(of: Result<(T, T), Error>.self) { group in
         group.addTask { () async -> Result<(T, T), Error> in
             do {
-                var expr1 = try await expression1()
-                var expr2 = try await expression2()
+                var expr1: T
+                var expr2: T
 
-                while !Task.isCancelled, expr1 != expr2 {
-                    await Task.yield()
+                repeat {
+                    async let _expr1 = expression1()
+                    async let _expr2 = expression2()
 
-                    expr1 = try await expression1()
-                    expr2 = try await expression2()
-                }
+                    (expr1, expr2) = try await (_expr1, _expr2)
+                } while !Task.isCancelled && expr1 != expr2
+
                 return .success((expr1, expr2))
             } catch {
                 return .failure(error)
