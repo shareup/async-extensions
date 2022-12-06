@@ -91,7 +91,9 @@ public extension Future {
 }
 
 public extension Future where T == Void {
-    func resolve() { resolve(()) }
+    func resolve() {
+        resolve(())
+    }
 }
 
 private extension Future {
