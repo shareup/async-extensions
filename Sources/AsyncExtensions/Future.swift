@@ -18,18 +18,18 @@ Sendable {
     public init(timeout: TimeInterval) {
         Task {
             await withThrowingTaskGroup(of: Void.self) { group in
-                let _ = group.addTaskUnlessCancelled { [weak self] in
+                _ = group.addTaskUnlessCancelled { [weak self] in
                     // TODO: Replace this with `Clock` when iOS 16 is minimum
                     let timeoutNs = Double(NSEC_PER_SEC) * timeout
                     try await Task.sleep(nanoseconds: UInt64(timeoutNs))
                     self?.fail(TimeoutError())
                 }
 
-                let _ = group.addTaskUnlessCancelled { [weak self] in
-                    let _ = try await self?.value
+                _ = group.addTaskUnlessCancelled { [weak self] in
+                    _ = try await self?.value
                 }
 
-                let _ = await group.nextResult()
+                _ = await group.nextResult()
                 group.cancelAll()
             }
         }
