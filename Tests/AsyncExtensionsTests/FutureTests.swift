@@ -1,4 +1,5 @@
 import AsyncExtensions
+import Synchronized
 import XCTest
 
 final class FutureTests: XCTestCase {
@@ -107,51 +108,10 @@ final class FutureTests: XCTestCase {
         }
     }
 
-    func testInitWithAsyncBlock() async throws {
-        let future = Future<Int> { () async throws -> Int in
-            try await Task.sleep(nanoseconds: 20 * NSEC_PER_MSEC)
-            return 1
-        }
-        let value = try await future.value
-        XCTAssertEqual(1, value)
-    }
-
-    func testInitWithFailingAsyncBlock() async throws {
-        let future = Future<Int> { () async throws -> Int in
-            try await Task.sleep(nanoseconds: 20 * NSEC_PER_MSEC)
-            throw TestError()
-        }
-        do {
-            let value = try await future.value
-            XCTFail("Should not have received \(value)")
-        } catch {
-            XCTAssertTrue(error is TestError)
-        }
-    }
-
-    func testInitWithBlock() async throws {
-        let future = Future<Int> { completion in
-            later { completion(.success(1)) }
-        }
-        let value = try await future.value
-        XCTAssertEqual(1, value)
-    }
-
-    func testInitWithFailingBlock() async throws {
-        let future = Future<Int> { completion in
-            later { completion(.failure(TestError())) }
-        }
-        do {
-            let value = try await future.value
-            XCTFail("Should not have received \(value)")
-        } catch {
-            XCTAssertTrue(error is TestError)
-        }
-    }
-
     func testResolvingWithManyAwaits() async throws {
-        let future = Future<Int> { completion in
-            later(milliseconds: 1) { completion(.success(1)) }
+        let future = Future<Int>()
+        later(milliseconds: (1 ... 10).randomElement()!) {
+            future.resolve(1)
         }
 
         let count = 1000
@@ -173,8 +133,9 @@ final class FutureTests: XCTestCase {
     }
 
     func testFailingWithManyAwaits() async throws {
-        let future = Future<Int> { completion in
-            later(milliseconds: 1) { completion(.failure(TestError())) }
+        let future = Future<Int>()
+        later(milliseconds: (1 ... 10).randomElement()!) {
+            future.fail(TestError())
         }
 
         let count = 1000
@@ -196,6 +157,189 @@ final class FutureTests: XCTestCase {
                 return false
             }
         })
+    }
+
+    func testCancel() async throws {
+        let future = Future<Int>()
+        let didCancel = Future<Void>()
+
+        let task = Task {
+            do {
+                let value = try await future.value
+                XCTFail("Should not have resolved to \(value)")
+            } catch {
+                XCTAssertTrue(error is CancellationError)
+                didCancel.resolve()
+            }
+        }
+
+        task.cancel()
+
+        try await didCancel.value
+    }
+
+    func testCancelOneAwaitAmongMany() async throws {
+        let future = Future<Int>()
+        let values = Locked<[Int]>([])
+
+        let taskToCancel = Task {
+            do {
+                let value = try await future.value
+                XCTFail("Should not have resolved to \(value)")
+            } catch {
+                XCTAssertTrue(error is CancellationError)
+                future.resolve(1)
+            }
+        }
+
+        let taskToAwait1 = Task {
+            let value = try await future.value
+            values.access { $0.append(value) }
+        }
+
+        let taskToAwait2 = Task {
+            let value = try await future.value
+            values.access { $0.append(value) }
+        }
+
+        let taskToAwait3 = Task {
+            let value = try await future.value
+            values.access { $0.append(value) }
+        }
+
+        // Give the tasks an opportunity to await the future
+        try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 20)
+
+        taskToCancel.cancel()
+
+        try await taskToAwait1.value
+        try await taskToAwait2.value
+        try await taskToAwait3.value
+
+        XCTAssertEqual([1, 1, 1], values.access { $0 })
+
+        let value = try await future.value
+        XCTAssertEqual(1, value)
+    }
+
+    func testRandomCancellations() async throws {
+        let count = 1000
+        let timeoutMs = 20
+
+        let shouldSucceed = Locked(0)
+        let didSucceed = Locked(0)
+        let didFail = Locked(0)
+
+        let future = Future<Int>()
+
+        later(milliseconds: timeoutMs) { future.resolve(1) }
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            (0 ..< count).forEach { _ in
+                if Bool.random() {
+                    // This task will probably be cancelled
+                    group.addTask {
+                        let task = Task {
+                            do {
+                                let value = try await future.value
+                                XCTAssertEqual(1, value)
+                                didSucceed.access { $0 += 1 }
+                            } catch {
+                                XCTAssertTrue(error is CancellationError)
+                                didFail.access { $0 += 1 }
+                            }
+                        }
+
+                        let timeout = UInt64(Double(timeoutMs) * 0.8) * NSEC_PER_MSEC
+                        try await Task.sleep(nanoseconds: timeout)
+                        task.cancel()
+                    }
+
+                } else {
+                    // This task should definitely succeed
+                    shouldSucceed.access { $0 += 1 }
+                    group.addTask {
+                        let value = try await future.value
+                        XCTAssertEqual(1, value)
+                        didSucceed.access { $0 += 1 }
+                    }
+                }
+            }
+
+            try await group.waitForAll()
+        }
+
+        // `didSucceed` >= `shouldSucceed`
+        XCTAssertGreaterThanOrEqual(
+            didSucceed.access { $0 },
+            shouldSucceed.access { $0 }
+        )
+
+        XCTAssertEqual(
+            count,
+            didSucceed.access { $0 } + didFail.access { $0 }
+        )
+    }
+
+    func testReturnValueBeforeTimeoutExpires() async throws {
+        let future = Future<Int>(timeout: 100)
+        later { future.resolve(1) }
+        let value = try await future.value
+        XCTAssertEqual(1, value)
+    }
+
+    func testTimeoutExpiresBeforeResolution() async throws {
+        let future = Future<Int>(timeout: 0.020)
+        guard case let .failure(error) = await future.result
+        else { return XCTFail("Future should have failed") }
+        XCTAssertTrue(error is TimeoutError)
+    }
+
+    func testTimeoutFailsAllAwaits() async throws {
+        let future = Future<Int>(timeout: 0.020)
+        let task1 = Task { try await future.value }
+        let task2 = Task { try await future.value }
+        let task3 = Task { try await future.value }
+
+        let results = await [task1.result, task2.result, task3.result]
+
+        func isTimeout(_ result: Result<Int, Error>) -> Bool {
+            guard case let .failure(error) = result
+            else { return false }
+            return error is TimeoutError
+        }
+
+        XCTAssertTrue(results.allSatisfy(isTimeout))
+    }
+
+    func testResultWithValue() async throws {
+        let future = Future<Int>()
+        later { future.resolve(1) }
+
+        let result = await future.result
+
+        switch result {
+        case let .success(value):
+            XCTAssertEqual(1, value)
+
+        case let .failure(error):
+            XCTFail("Should not have received failure: \(error)")
+        }
+    }
+
+    func testResultWithFailure() async throws {
+        let future = Future<Int>()
+        later { future.fail(TestError()) }
+
+        let result = await future.result
+
+        switch result {
+        case let .success(value):
+            XCTFail("Should not have received success: \(value)")
+
+        case let .failure(error):
+            XCTAssertTrue(error is TestError)
+        }
     }
 }
 
