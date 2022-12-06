@@ -9,8 +9,43 @@ Sendable {
 
     private let state = Locked(State())
 
+    /// Creates a new, unresolved future.
     public init() {}
 
+    /// Creates a new, unresolved future with the specified
+    /// timeout. If the timeout elapses before the future
+    /// resolves, it will fail with `TimeoutError`.
+    public init(timeout: TimeInterval) {
+        Task {
+            await withThrowingTaskGroup(of: Void.self) { group in
+                let _ = group.addTaskUnlessCancelled { [weak self] in
+                    // TODO: Replace this with `Clock` when iOS 15 is minimum
+                    let timeoutNs = Double(NSEC_PER_SEC) * timeout
+                    try await Task.sleep(nanoseconds: UInt64(timeoutNs))
+                    self?.fail(TimeoutError())
+                }
+
+                let _ = group.addTaskUnlessCancelled { [weak self] in
+                    let _ = try await self?.value
+                }
+
+                let _ = await group.nextResult()
+                group.cancelAll()
+            }
+        }
+    }
+
+    /// This property waits for the receiver to resolve
+    /// or fail before returning the resolved value or
+    /// throwing the error that caused the future to fail.
+    /// Multiple callers can wait for the future at the same
+    /// time, and each one will be notified upon resolution
+    /// or failure of the future.
+    ///
+    /// If the enclosing `Task` where this property was called
+    /// is cancelled, a `CancellationError` will be thrown for
+    /// that caller only. The future itself will wait to resolve
+    /// or fail for all other callers.
     public var value: T { get async throws {
         let id = UUID().uuidString
 
@@ -50,6 +85,9 @@ Sendable {
         )
     }}
 
+    /// Resolves the receiver with the specified value. If the
+    /// future has already been resolved or failed, this is
+    /// a no-op.
     public func resolve(_ value: T) {
         state.access { state in
             guard state.result == nil else { return }
@@ -58,6 +96,9 @@ Sendable {
         resumeContinuations()
     }
 
+    /// Fails the receiver with the specified error. If the
+    /// future has already been resolved or failed, this is
+    /// a no-op.
     public func fail(_ error: Error) {
         state.access { state in
             guard state.result == nil else { return }
@@ -80,6 +121,17 @@ Sendable {
 }
 
 public extension Future {
+    /// This method waits for the receiver to resolve
+    /// or fail before returning the a `Result` containing
+    /// either the resolved value or the error that caused
+    /// the future to fail. Multiple callers can wait for the
+    /// future at the same time, and each one will be notified
+    /// upon resolution or failure of the future.
+    ///
+    /// If the enclosing `Task` where this method was called
+    /// is cancelled, a `CancellationError` will be thrown for
+    /// that caller only. The future itself will wait to resolve
+    /// or fail for all other callers.
     var result: Result<T, Error> { get async {
         do {
             let value = try await value
@@ -91,6 +143,8 @@ public extension Future {
 }
 
 public extension Future where T == Void {
+    /// Resolves the receiver. If the future has already been
+    /// resolved or failed, this is a no-op.
     func resolve() {
         resolve(())
     }

@@ -281,6 +281,37 @@ final class FutureTests: XCTestCase {
         )
     }
 
+    func testReturnValueBeforeTimeoutExpires() async throws {
+        let future = Future<Int>(timeout: 100)
+        later { future.resolve(1) }
+        let value = try await future.value
+        XCTAssertEqual(1, value)
+    }
+
+    func testTimeoutExpiresBeforeResolution() async throws {
+        let future = Future<Int>(timeout: 0.020)
+        guard case let .failure(error) = await future.result
+        else { return XCTFail("Future should have failed") }
+        XCTAssertTrue(error is TimeoutError)
+    }
+
+    func testTimeoutFailsAllAwaits() async throws {
+        let future = Future<Int>(timeout: 0.020)
+        let task1 = Task { try await future.value }
+        let task2 = Task { try await future.value }
+        let task3 = Task { try await future.value }
+
+        let results = await [task1.result, task2.result, task3.result]
+
+        func isTimeout(_ result: Result<Int, Error>) -> Bool {
+            guard case let .failure(error) = result
+            else { return false }
+            return error is TimeoutError
+        }
+
+        XCTAssertTrue(results.allSatisfy(isTimeout))
+    }
+
     func testResultWithValue() async throws {
         let future = Future<Int>()
         later { future.resolve(1) }
