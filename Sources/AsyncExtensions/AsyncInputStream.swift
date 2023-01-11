@@ -77,8 +77,7 @@ public final class AsyncInputStream {
 
     private func doRead(maxLength len: Int) async throws -> [UInt8]? {
         try Task.checkCancellation()
-
-        guard try state.checkOpen() else { return nil }
+        try state.checkOpen()
 
         state.resizeBuffer(to: len)
 
@@ -114,16 +113,16 @@ private enum State {
     case failed(Error)
     case open(InputStream, UnsafeMutablePointer<UInt8>, bufferSize: Int)
 
-    func checkOpen() throws -> Bool {
+    func checkOpen() throws {
         switch self {
         case .closed:
-            return false
+            throw AsyncInputStreamError.closed
 
         case let .failed(error):
             throw error
 
         case .open:
-            return true
+            break
         }
     }
 

@@ -80,22 +80,6 @@ final class AsyncInputStreamTests: XCTestCase {
         )
     }
 
-    func testReadBytesPastEndDoesNotThrow() async throws {
-        let size = 128 * 1024
-        let data = Data([UInt8](repeating: 127, count: size))
-
-        let stream = AsyncInputStream(data: data)
-
-        let chunk = try await stream.read(maxLength: size)
-        XCTAssertEqual(data, Data(try XCTUnwrap(chunk)))
-
-        let noChunk1 = try await stream.read(maxLength: size)
-        XCTAssertNil(noChunk1)
-
-        let noChunk2 = try await stream.read(maxLength: size)
-        XCTAssertNil(noChunk2)
-    }
-
     func testMaxChunkSize() async throws {
         let data = Data([0, 1, 2, 3, 4])
         XCTAssertEqual(5, data.count)
