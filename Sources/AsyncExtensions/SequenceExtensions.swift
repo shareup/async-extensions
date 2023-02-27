@@ -17,8 +17,8 @@ public extension Sequence {
 
     func concurrentMap<T>(
         priority: TaskPriority? = nil,
-        _ transform: @escaping (Element) async throws -> T
-    ) async throws -> [T] {
+        _ transform: @escaping @Sendable (Element) async throws -> T
+    ) async throws -> [T] where Element: Sendable, T: Sendable {
         let tasks = map { element in
             Task(priority: priority) {
                 try await transform(element)

@@ -1,6 +1,6 @@
 import AsyncExtensions
 import AsyncTestExtensions
-import Combine
+@preconcurrency import Combine
 import XCTest
 
 final class CombineAsyncStreamTests: XCTestCase {
