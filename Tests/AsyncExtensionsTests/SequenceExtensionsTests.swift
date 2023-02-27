@@ -46,7 +46,7 @@ final class MapFunctionsTests: XCTestCase {
 
         let state = Locked(TestState())
 
-        let square: (Int) async throws -> Int = {
+        let square: @Sendable (Int) async throws -> Int = {
             state.access { $0.concurrentTestCount += 1 }
             defer { state.access { $0.concurrentTestCount -= 1 } }
             try await Task.sleep(nanoseconds: 10_000_000)

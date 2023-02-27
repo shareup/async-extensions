@@ -187,7 +187,11 @@ private enum State {
             // This copies the bytes into the array.
             let bytes = Array(validBuffer)
 
-            buffer.assign(repeating: 0, count: bufferSize)
+            #if compiler(>=5.8)
+                buffer.update(repeating: 0, count: bufferSize)
+            #else
+                buffer.assign(repeating: 0, count: bufferSize)
+            #endif
 
             return bytes
         }
