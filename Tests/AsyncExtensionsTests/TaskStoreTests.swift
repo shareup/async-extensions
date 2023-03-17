@@ -48,38 +48,32 @@ final class TaskStoreTests: XCTestCase {
         wait(for: [ex1], timeout: 2)
     }
 
-    func testInsertNew() throws {
+    func testStoredNewTask() throws {
         let store = TaskStore()
 
         let key = "key"
 
         let ex1 = expectation(description: "Task 1 should complete")
-        let didInsert1 = store.insertNew(
-            Task {
-                do {
-                    try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 100)
-                    ex1.fulfill()
-                } catch {
-                    XCTFail("Should have completed")
-                }
-            },
-            forKey: key
-        )
+        let didInsert1 = store.storedNewTask(key: key) {
+            do {
+                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 100)
+                ex1.fulfill()
+            } catch {
+                XCTFail("Should have completed")
+            }
+        }
 
         let ex2 = expectation(description: "Task 2 should have been cancelled")
-        let didInsert2 = store.insertNew(
-            Task {
-                do {
-                    try await Task.sleep(nanoseconds: NSEC_PER_SEC * 10)
-                    XCTFail("Should have been cancelled")
-                } catch is CancellationError {
-                    ex2.fulfill()
-                } catch {
-                    XCTFail("Should have received CancellationError, not \(error)")
-                }
-            },
-            forKey: key
-        )
+        let didInsert2 = store.storedNewTask(key: key) {
+            do {
+                try await Task.sleep(nanoseconds: NSEC_PER_SEC * 10)
+                XCTFail("Should have been cancelled")
+            } catch is CancellationError {
+                ex2.fulfill()
+            } catch {
+                XCTFail("Should have received CancellationError, not \(error)")
+            }
+        }
 
         wait(for: [ex1, ex2], timeout: 2)
         XCTAssertTrue(didInsert1)

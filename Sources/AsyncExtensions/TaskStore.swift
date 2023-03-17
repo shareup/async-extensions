@@ -100,6 +100,15 @@ public extension TaskStore {
             .store(forKey: key, in: self)
     }
 
+    func storedNewTask<S: Sendable>(
+        key: String,
+        priority: TaskPriority? = nil,
+        operation: @escaping @Sendable () async -> S
+    ) -> Bool {
+        Task<S, Never>(priority: priority, operation: operation)
+            .storeNew(forKey: key, in: self)
+    }
+
     @discardableResult
     func storedTask(
         priority: TaskPriority? = nil,
@@ -116,6 +125,15 @@ public extension TaskStore {
     ) {
         Task(priority: priority, operation: operation)
             .store(forKey: key, in: self)
+    }
+
+    func storedNewTask(
+        key: String,
+        priority: TaskPriority? = nil,
+        operation: @escaping @Sendable () async throws -> some Sendable
+    ) -> Bool {
+        Task(priority: priority, operation: operation)
+            .storeNew(forKey: key, in: self)
     }
 }
 
