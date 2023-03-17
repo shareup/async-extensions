@@ -100,6 +100,7 @@ public extension TaskStore {
             .store(forKey: key, in: self)
     }
 
+    @discardableResult
     func storedNewTask<S: Sendable>(
         key: String,
         priority: TaskPriority? = nil,
@@ -127,6 +128,7 @@ public extension TaskStore {
             .store(forKey: key, in: self)
     }
 
+    @discardableResult
     func storedNewTask(
         key: String,
         priority: TaskPriority? = nil,
