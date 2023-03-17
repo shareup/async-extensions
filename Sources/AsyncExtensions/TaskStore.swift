@@ -2,13 +2,25 @@ import Foundation
 import Synchronized
 
 public extension Task {
+    /// Inserts the task into the specified `TaskStore`.
+    /// - returns: The key under which the task was stored.
     @discardableResult
     func store(in store: TaskStore) -> String {
         store.add(self)
     }
 
+    /// Inserts the task into the specified `TaskStore` under the
+    /// supplied `key`.
     func store(forKey key: String, in store: TaskStore) {
         store.insert(self, forKey: key)
+    }
+
+    /// Inserts the task into the specified `TaskStore` if there is
+    /// not already a task stored under the same `key`. If there is
+    /// already a task stored under the `key`, the receiver is cancelled.
+    /// - returns: `true` if the task was inserted, otherwise `false`.
+    func storeNew(forKey key: String, in store: TaskStore) -> Bool {
+        store.insertNew(self, forKey: key)
     }
 }
 
@@ -22,6 +34,8 @@ Sendable {
         state.access { $0.cancelAll() }
     }
 
+    /// Inserts the task into the receiver.
+    /// - returns: The key under which the task was stored.
     @discardableResult
     public func add(_ task: Task<some Any, some Any>) -> String {
         let key = UUID().uuidString
@@ -29,14 +43,31 @@ Sendable {
         return key
     }
 
+    /// Inserts the task into the receiver under the supplied `key`.
     public func insert(_ task: Task<some Any, some Any>, forKey key: String) {
         state.access { $0.insert(task, forKey: key) }
     }
 
+    /// Inserts the task into the receiver if there is not already a
+    /// task stored under the same `key`. If there is already a task
+    /// stored under the `key`, the `task` argument is cancelled.
+    /// - returns: `true` if the task was inserted, otherwise `false`.
+    @discardableResult
+    public func insertNew(
+        _ task: Task<some Any, some Any>,
+        forKey key: String
+    ) -> Bool {
+        let didInsert = state.access { $0.insertNew(task, forKey: key) }
+        if !didInsert { task.cancel() }
+        return didInsert
+    }
+
+    /// Cancels the task stored under the specified key.
     public func cancel(forKey key: String) {
         state.access { $0.cancel(forKey: key) }
     }
 
+    /// Cancels all of the tasks stored in the receiver.
     public func cancelAll() {
         state.access { $0.cancelAll() }
     }
@@ -94,6 +125,15 @@ private struct State {
     mutating func insert(_ task: Task<some Any, some Any>, forKey key: String) {
         cancel(forKey: key)
         tasks[key] = { task.cancel() }
+    }
+
+    mutating func insertNew(
+        _ task: Task<some Any, some Any>,
+        forKey key: String
+    ) -> Bool {
+        guard tasks[key] == nil else { return false }
+        tasks[key] = { task.cancel() }
+        return true
     }
 
     mutating func cancel(forKey key: String) {
