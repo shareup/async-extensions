@@ -41,7 +41,7 @@ final class AsyncOutputStreamTests: XCTestCase {
     func testWriteToFile() async throws {
         try await inSandbox { tempDir in
             let fileURL = append("test.txt", to: tempDir)
-            let stream = try AsyncOutputStream(url: fileURL)
+            let stream = try AsyncOutputStream(url: fileURL, append: false)
             try await AssertEqual(6, await stream.write(Data("Hello!".utf8)))
             XCTAssertEqual("Hello!", try String(contentsOf: fileURL))
         }
@@ -50,7 +50,7 @@ final class AsyncOutputStreamTests: XCTestCase {
     func testWriteToInvalidURL() async throws {
         try await inSandbox { tempDir in
             let fileURL = append("not/an/actual/file", to: tempDir)
-            let stream = try AsyncOutputStream(url: fileURL)
+            let stream = try AsyncOutputStream(url: fileURL, append: false)
             try await AssertThrowsError(await stream.write(Data("Hello!".utf8)))
         }
     }
