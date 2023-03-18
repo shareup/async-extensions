@@ -35,7 +35,7 @@ let package = Package(
   dependencies: [
     .package(
       url: "https://github.com/shareup/async-extensions.git",
-      from: "2.6.0"
+      from: "3.0.0"
     )
   ]
 )
