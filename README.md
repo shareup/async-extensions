@@ -7,9 +7,11 @@ The AsyncExtensions package also inlcudes the AsyncTestExtensions target, which 
 ## AsyncExtensions includes
 
 - `AsyncInputStream`: A convenient wrapper around [`InputStream`](https://developer.apple.com/documentation/foundation/inputstream) allowing for simple, type-safe access to stream data.
+- `AsyncOutputStream`: A convenient wrapper around [`OutputStream`](https://developer.apple.com/documentation/foundation/outputstream) allowing for simple, type-safe streaming of data.
 - `CombineAsyncStream`: A backported version of [`AsyncPublisher`](https://developer.apple.com/documentation/combine/asyncpublisher), which creates an `AsyncStream` from a Combine Publisher and is only supported on iOS 15+.
 - `Future`: A thread-safe implemention of a future that is useful when briding traditional Swift code with code employing Swift Concurrency.
 - `Sequence.asyncMap()` and `Sequence.concurrentMap()`: Extensions allowing for applying async transformations to `Sequence`.
+- `TaskStore`: A thread-safe store for `Task`, which can help when migrating from Combine publishers to Swift Concurrency.
 - `TimeoutError`: A simple error intending to represent a timeout. Modelled after [`CancellationError`](https://developer.apple.com/documentation/swift/cancellationerror).
 
 ## AsyncTestExtensions includes
@@ -33,7 +35,7 @@ let package = Package(
   dependencies: [
     .package(
       url: "https://github.com/shareup/async-extensions.git",
-      from: "2.2.0"
+      from: "2.6.0"
     )
   ]
 )

@@ -4,37 +4,37 @@ import XCTest
 
 final class AssertionsTests: XCTestCase {
     func testAssertEqual() async throws {
-        await AssertEqual(
-            try await delayed(2),
-            try await delayed(2)
+        try await AssertEqual(
+            await delayed(2),
+            await delayed(2)
         )
     }
 
     func testAssertTrue() async throws {
-        await AssertTrue(try await delayed(true))
+        try await AssertTrue(await delayed(true))
     }
 
     func testAssertFalse() async throws {
-        await AssertFalse(try await delayed(false))
+        try await AssertFalse(await delayed(false))
     }
 
     func testAssertNil() async throws {
-        await AssertNil(try await delayed(nil as String?))
+        try await AssertNil(await delayed(nil as String?))
     }
 
     func testAssertNotNil() async throws {
-        await AssertNotNil(try await delayed("some" as String?))
+        try await AssertNotNil(await delayed("some" as String?))
     }
 
     func testAssertThrowsError() async throws {
         struct Err: Error, Equatable {}
-        await AssertThrowsError(try await delayedThrow(Err())) { err in
+        try await AssertThrowsError(await delayedThrow(Err())) { err in
             XCTAssertEqual(Err(), err as? Err)
         }
     }
 
     func testAssertNoThrow() async throws {
-        await AssertNoThrow(try await delayed("nope"))
+        try await AssertNoThrow(await delayed("nope"))
     }
 
     func testAssertEqualEventually() async throws {
