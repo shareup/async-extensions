@@ -5,18 +5,18 @@ import XCTest
 final class AsyncInputStreamTests: XCTestCase {
     func testReadMaxLengthOfZero() async throws {
         let stream = AsyncInputStream(data: Data("Hello!".utf8))
-        await AssertNil(try await stream.read(maxLength: 0))
-        await AssertNil(try await stream.read(maxLength: 0))
+        try await AssertNil(await stream.read(maxLength: 0))
+        try await AssertNil(await stream.read(maxLength: 0))
     }
 
     func testReadMaxLengthWithData() async throws {
         let stream = AsyncInputStream(data: Data("Hello!".utf8))
-        await AssertEqual([72, 101, 108], try await stream.read(maxLength: 3))
-        await AssertEqual([108, 111], try await stream.read(maxLength: 2))
-        await AssertEqual([33], try await stream.read(maxLength: 99999))
-        await AssertNil(try await stream.read(maxLength: 99999))
-        await AssertThrowsError(
-            try await stream.read(maxLength: 99999),
+        try await AssertEqual([72, 101, 108], await stream.read(maxLength: 3))
+        try await AssertEqual([108, 111], await stream.read(maxLength: 2))
+        try await AssertEqual([33], await stream.read(maxLength: 99999))
+        try await AssertNil(await stream.read(maxLength: 99999))
+        try await AssertThrowsError(
+            await stream.read(maxLength: 99999),
             "Should have thrown an error after closing",
             { XCTAssertEqual(.closed, $0 as? AsyncInputStreamError) }
         )
@@ -25,7 +25,7 @@ final class AsyncInputStreamTests: XCTestCase {
     func testReadMaxLengthWithURL() async throws {
         let tempDir = FileManager.default
             .temporaryDirectory
-            .appendingPathComponent("testInputStreamPublisherWithValidURL-\(arc4random())")
+            .appendingPathComponent("TestAsyncInputStream-\(arc4random())")
 
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
 
@@ -38,12 +38,12 @@ final class AsyncInputStreamTests: XCTestCase {
 
         let stream = try AsyncInputStream(url: url)
 
-        await AssertEqual([72, 101, 108], try await stream.read(maxLength: 3))
-        await AssertEqual([108, 111], try await stream.read(maxLength: 2))
-        await AssertEqual([33], try await stream.read(maxLength: 99999))
-        await AssertNil(try await stream.read(maxLength: 99999))
-        await AssertThrowsError(
-            try await stream.read(maxLength: 99999),
+        try await AssertEqual([72, 101, 108], await stream.read(maxLength: 3))
+        try await AssertEqual([108, 111], await stream.read(maxLength: 2))
+        try await AssertEqual([33], await stream.read(maxLength: 99999))
+        try await AssertNil(await stream.read(maxLength: 99999))
+        try await AssertThrowsError(
+            await stream.read(maxLength: 99999),
             "Should have thrown an error after closing",
             { XCTAssertEqual(.closed, $0 as? AsyncInputStreamError) }
         )
@@ -56,15 +56,15 @@ final class AsyncInputStreamTests: XCTestCase {
         let stream = AsyncInputStream(data: data)
 
         let firstSize = 256 * 1024 + 1
-        await AssertEqual(
+        try await AssertEqual(
             Array(data[0 ..< firstSize]),
-            try await stream.read(maxLength: firstSize)
+            await stream.read(maxLength: firstSize)
         )
 
         let secondSize = size - firstSize
-        await AssertEqual(
+        try await AssertEqual(
             Array(data[firstSize...]),
-            try await stream.read(maxLength: secondSize)
+            await stream.read(maxLength: secondSize)
         )
     }
 
@@ -74,9 +74,9 @@ final class AsyncInputStreamTests: XCTestCase {
 
         let stream = AsyncInputStream(data: data)
 
-        await AssertEqual(
-            try await stream.read(maxLength: 4 * 1024 * 1024),
-            try await stream.read(maxLength: 4 * 1024 * 1024)
+        try await AssertEqual(
+            await stream.read(maxLength: 4 * 1024 * 1024),
+            await stream.read(maxLength: 4 * 1024 * 1024)
         )
     }
 
@@ -85,16 +85,16 @@ final class AsyncInputStreamTests: XCTestCase {
         XCTAssertEqual(5, data.count)
 
         let fiveBytes = AsyncInputStream(data: data, maxChunkSize: 5)
-        await AssertEqual(Array(data), try await fiveBytes.read(maxLength: 5))
-        await AssertNil(try await fiveBytes.read(maxLength: 5))
+        try await AssertEqual(Array(data), await fiveBytes.read(maxLength: 5))
+        try await AssertNil(await fiveBytes.read(maxLength: 5))
 
         let fourBytes = AsyncInputStream(data: data, maxChunkSize: 4)
-        await AssertEqual(Array(data), try await fourBytes.read(maxLength: 5))
-        await AssertNil(try await fourBytes.read(maxLength: 5))
+        try await AssertEqual(Array(data), await fourBytes.read(maxLength: 5))
+        try await AssertNil(await fourBytes.read(maxLength: 5))
 
         let sixBytes = AsyncInputStream(data: data, maxChunkSize: 6)
-        await AssertEqual(Array(data), try await sixBytes.read(maxLength: 5))
-        await AssertNil(try await sixBytes.read(maxLength: 5))
+        try await AssertEqual(Array(data), await sixBytes.read(maxLength: 5))
+        try await AssertNil(await sixBytes.read(maxLength: 5))
     }
 
     func testReadUInt8() async throws {
@@ -104,9 +104,9 @@ final class AsyncInputStreamTests: XCTestCase {
         let input: [UInt8] = [7]
         let stream = AsyncInputStream(data: Data(input))
 
-        await AssertEqual(value, try await stream.read())
-        await AssertThrowsError(
-            try await stream.read() as UInt8,
+        try await AssertEqual(value, await stream.read())
+        try await AssertThrowsError(
+            await stream.read() as UInt8,
             "Should have thrown an error after closing",
             { XCTAssertEqual(.couldNotReadFixedWidthInteger(1), $0 as? AsyncInputStreamError) }
         )
@@ -119,9 +119,9 @@ final class AsyncInputStreamTests: XCTestCase {
         let input: [UInt8] = [21, 205, 91, 7]
         let stream = AsyncInputStream(data: Data(input))
 
-        await AssertEqual(value, try await stream.read())
-        await AssertThrowsError(
-            try await stream.read() as UInt32,
+        try await AssertEqual(value, await stream.read())
+        try await AssertThrowsError(
+            await stream.read() as UInt32,
             "Should have thrown an error after closing",
             { XCTAssertEqual(.couldNotReadFixedWidthInteger(4), $0 as? AsyncInputStreamError) }
         )
@@ -134,9 +134,9 @@ final class AsyncInputStreamTests: XCTestCase {
         let input: [UInt8] = [63, 15, 27, 134, 72, 112, 0, 0]
         let stream = AsyncInputStream(data: Data(input))
 
-        await AssertEqual(value, try await stream.read())
-        await AssertThrowsError(
-            try await stream.read() as UInt64,
+        try await AssertEqual(value, await stream.read())
+        try await AssertThrowsError(
+            await stream.read() as UInt64,
             "Should have thrown an error after closing",
             { XCTAssertEqual(.couldNotReadFixedWidthInteger(8), $0 as? AsyncInputStreamError) }
         )
