@@ -3,7 +3,7 @@ import Foundation
 public final class AsyncOutputStream {
     private var state: State
 
-    public init(url: URL, append: Bool = true) throws {
+    public init(url: URL, append: Bool) throws {
         guard let stream = OutputStream(url: url, append: append)
         else { throw AsyncOutputStreamError.couldNotOpenURL(url) }
 
