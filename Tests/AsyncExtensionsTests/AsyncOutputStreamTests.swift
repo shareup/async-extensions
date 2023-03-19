@@ -31,7 +31,7 @@ final class AsyncOutputStreamTests: XCTestCase {
         try await AssertEqual(4, await stream.write(987_654_321 as Int32))
         XCTAssertTrue(buffer.hasPrefix(Data([177, 104, 222, 58, 0, 0, 0])))
 
-        try await AssertEqual(2, await stream.write(65123 as UInt16))
+        try await AssertEqual(2, await stream.write(65_123 as UInt16))
         XCTAssertTrue(buffer.hasPrefix(Data([177, 104, 222, 58, 99, 254, 0])))
 
         try await AssertEqual(1, await stream.write(15 as Int8))
