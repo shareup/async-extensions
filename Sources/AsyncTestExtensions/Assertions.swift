@@ -117,7 +117,7 @@ public func AssertEqualEventually<T: Equatable>(
 
                 repeat {
                     await Task.yield()
-                    
+
                     async let _expr1 = expression1()
                     async let _expr2 = expression2()
 

@@ -1,0 +1,108 @@
+import Combine
+import Foundation
+import Synchronized
+
+public extension Publisher where Failure == Never {
+    /// Wraps the receiver in an `AsyncStream<Output>` using
+    /// an unbounded buffering policy.
+    ///
+    /// The advantage of using `allValues` over `values` is
+    /// `allValues` is guaranteed to provide every value
+    /// produced by the receiver, whereas `values` only
+    /// requests a single value with every iteration.
+    var allValues: AsyncStream<Output> {
+        let state = Locked<State>(.waiting)
+
+        return AsyncStream<Output>(
+            Output.self,
+            bufferingPolicy: .unbounded
+        ) { cont in
+            cont.onTermination = { _ in
+                state.access { $0.cancel() }
+            }
+
+            let sub = self.sink(
+                receiveCompletion: { _ in
+                    cont.finish()
+                    state.access { $0.cancel() }
+                },
+                receiveValue: { cont.yield($0) }
+            )
+
+            state.access { $0.start(sub) }
+        }
+    }
+}
+
+public extension Publisher where Failure: Error {
+    /// Wraps the receiver in an `AsyncThrowingStream<Output, Error>`
+    /// using an unbounded buffering policy.
+    ///
+    /// The advantage of using `allValues` over `values` is
+    /// `allValues` is guaranteed to provide every value
+    /// produced by the receiver, whereas `values` only
+    /// requests a single value with every iteration.
+    var allValues: AsyncThrowingStream<Output, Error> {
+        let state = Locked<State>(.waiting)
+
+        return AsyncThrowingStream<Output, Error>(
+            Output.self,
+            bufferingPolicy: .unbounded
+        ) { cont in
+            cont.onTermination = { _ in
+                state.access { $0.cancel() }
+            }
+
+            let sub = self.sink(
+                receiveCompletion: { completion in
+                    defer { state.access { $0.cancel() } }
+
+                    switch completion {
+                    case .finished:
+                        cont.finish()
+
+                    case let .failure(error):
+                        cont.finish(throwing: error)
+                    }
+                },
+                receiveValue: { cont.yield($0) }
+            )
+
+            state.access { $0.start(sub) }
+        }
+    }
+}
+
+private enum State {
+    case running(AnyCancellable)
+    case terminal
+    case waiting
+
+    mutating func cancel() {
+        switch self {
+        case let .running(sub):
+            sub.cancel()
+            self = .terminal
+
+        case .terminal:
+            break
+
+        case .waiting:
+            self = .terminal
+        }
+    }
+
+    mutating func start(_ subscription: AnyCancellable) {
+        switch self {
+        case .running:
+            assertionFailure()
+            break
+
+        case .terminal:
+            break
+
+        case .waiting:
+            self = .running(subscription)
+        }
+    }
+}
