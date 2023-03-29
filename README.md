@@ -8,7 +8,7 @@ The AsyncExtensions package also inlcudes the AsyncTestExtensions target, which 
 
 - `AsyncInputStream`: A convenient wrapper around [`InputStream`](https://developer.apple.com/documentation/foundation/inputstream) allowing for simple, type-safe access to stream data.
 - `AsyncOutputStream`: A convenient wrapper around [`OutputStream`](https://developer.apple.com/documentation/foundation/outputstream) allowing for simple, type-safe streaming of data.
-- `CombineAsyncStream`: A backported version of [`AsyncPublisher`](https://developer.apple.com/documentation/combine/asyncpublisher), which creates an `AsyncStream` from a Combine Publisher and is only supported on iOS 15+.
+- `Publisher.allValues`: Creates an `AsyncStream` from a Combine Publisher. It buffers all of the publisher's output, ensuring the `AsyncStream` will produce everything the publisher publishes.
 - `Future`: A thread-safe implemention of a future that is useful when briding traditional Swift code with code employing Swift Concurrency.
 - `Sequence.asyncMap()` and `Sequence.concurrentMap()`: Extensions allowing for applying async transformations to `Sequence`.
 - `TaskStore`: A thread-safe store for `Task`, which can help when migrating from Combine publishers to Swift Concurrency.
@@ -35,7 +35,7 @@ let package = Package(
   dependencies: [
     .package(
       url: "https://github.com/shareup/async-extensions.git",
-      from: "3.0.0"
+      from: "4.0.0"
     )
   ]
 )
@@ -55,7 +55,5 @@ To use AsyncTestExtensions in a test target, add it as a dependency:
 ## License
 
 The license for AsyncExtensions is the standard MIT licence. You can find it in the LICENSE file.
-
-CombineAsyncStream was created by Marin Todorov. It was released on his blog at https://trycombine.com/posts/combine-async-sequence-2/.
 
 SequenceExtensions were heavily inspired by CollectionConcurrencyKit by John Sundell at https://github.com/JohnSundell/CollectionConcurrencyKit.
