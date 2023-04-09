@@ -1,4 +1,5 @@
 import AsyncExtensions
+import Synchronized
 import XCTest
 
 final class TaskStoreTests: XCTestCase {
@@ -132,9 +133,12 @@ final class TaskStoreTests: XCTestCase {
 
         let store = TaskStore()
 
+        let readyCount = Locked(0)
+
         let key1 = store.storedTask {
             do {
-                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 100)
+                readyCount.access { $0 += 1 }
+                try await Task.sleep(nanoseconds: NSEC_PER_SEC)
                 XCTFail("Should not have completed")
                 return 1
             } catch is CancellationError {
@@ -148,7 +152,8 @@ final class TaskStoreTests: XCTestCase {
 
         store.storedTask(key: "task2") {
             do {
-                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 100)
+                readyCount.access { $0 += 1 }
+                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 150)
                 ex2.fulfill()
                 return "Yep"
             } catch {
@@ -159,7 +164,8 @@ final class TaskStoreTests: XCTestCase {
 
         let key3 = store.storedTask {
             do {
-                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 100)
+                readyCount.access { $0 += 1 }
+                try await Task.sleep(nanoseconds: NSEC_PER_SEC)
                 XCTFail("Should not have completed")
                 return Double(999.99)
             } catch is CancellationError {
@@ -171,7 +177,11 @@ final class TaskStoreTests: XCTestCase {
             }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(50)) {
+        Task {
+            while readyCount.access({ $0 < 3 }) {
+                await Task.yield()
+            }
+
             store.cancelAll { [key1, key3].contains($0) }
         }
 
