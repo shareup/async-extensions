@@ -67,6 +67,11 @@ Sendable {
         state.access { $0.cancel(forKey: key) }
     }
 
+    /// Cancels all of the tasks that satisfy the given predicate.
+    public func cancelAll(where shouldBeRemoved: (String) -> Bool) {
+        state.access { $0.cancelAll(where: shouldBeRemoved) }
+    }
+
     /// Cancels all of the tasks stored in the receiver.
     public func cancelAll() {
         state.access { $0.cancelAll() }
@@ -158,6 +163,15 @@ private struct State {
 
     mutating func cancel(forKey key: String) {
         if let cancel = tasks.removeValue(forKey: key) { cancel() }
+    }
+
+    mutating func cancelAll(where shouldBeRemoved: (String) -> Bool) {
+        let keys = Array(tasks.keys)
+        keys.forEach { key in
+            if shouldBeRemoved(key) {
+                tasks.removeValue(forKey: key)?()
+            }
+        }
     }
 
     mutating func cancelAll() {
