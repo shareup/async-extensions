@@ -124,4 +124,57 @@ final class TaskStoreTests: XCTestCase {
 
         wait(for: [ex1, ex2, ex3], timeout: 2)
     }
+
+    func testCancelAllWhere() throws {
+        let ex1 = expectation(description: "Task 1 should have been cancelled")
+        let ex2 = expectation(description: "Task 2 should not have been cancelled")
+        let ex3 = expectation(description: "Task 3 should have been cancelled")
+
+        let store = TaskStore()
+
+        let key1 = store.storedTask {
+            do {
+                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 50)
+                XCTFail("Should not have completed")
+                return 1
+            } catch is CancellationError {
+                ex1.fulfill()
+                return 0
+            } catch {
+                XCTFail()
+                return 1
+            }
+        }
+
+        store.storedTask(key: "task2") {
+            do {
+                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 50)
+                ex2.fulfill()
+                return "Yep"
+            } catch {
+                XCTFail("Should have completed")
+                return "Nope"
+            }
+        }
+
+        let key3 = store.storedTask {
+            do {
+                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 50)
+                XCTFail("Should not have completed")
+                return Double(999.99)
+            } catch is CancellationError {
+                ex3.fulfill()
+                return Double(0)
+            } catch {
+                XCTFail()
+                throw error
+            }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(10)) {
+            store.cancelAll { [key1, key3].contains($0) }
+        }
+
+        wait(for: [ex1, ex2, ex3], timeout: 2)
+    }
 }
