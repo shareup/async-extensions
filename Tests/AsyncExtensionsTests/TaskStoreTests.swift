@@ -134,7 +134,7 @@ final class TaskStoreTests: XCTestCase {
 
         let key1 = store.storedTask {
             do {
-                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 50)
+                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 100)
                 XCTFail("Should not have completed")
                 return 1
             } catch is CancellationError {
@@ -148,7 +148,7 @@ final class TaskStoreTests: XCTestCase {
 
         store.storedTask(key: "task2") {
             do {
-                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 50)
+                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 100)
                 ex2.fulfill()
                 return "Yep"
             } catch {
@@ -159,7 +159,7 @@ final class TaskStoreTests: XCTestCase {
 
         let key3 = store.storedTask {
             do {
-                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 50)
+                try await Task.sleep(nanoseconds: NSEC_PER_MSEC * 100)
                 XCTFail("Should not have completed")
                 return Double(999.99)
             } catch is CancellationError {
@@ -171,7 +171,7 @@ final class TaskStoreTests: XCTestCase {
             }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(10)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(50)) {
             store.cancelAll { [key1, key3].contains($0) }
         }
 
