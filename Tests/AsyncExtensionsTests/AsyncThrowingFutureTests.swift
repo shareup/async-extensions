@@ -2,16 +2,16 @@ import AsyncExtensions
 import Synchronized
 import XCTest
 
-final class FutureTests: XCTestCase {
+final class AsyncThrowingFutureTests: XCTestCase {
     func testResolveBeforeAwaiting() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         future.resolve(1)
         let value = try await future.value
         XCTAssertEqual(1, value)
     }
 
     func testFailBeforeAwaiting() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         future.fail(TestError())
         do {
             let value = try await future.value
@@ -22,14 +22,14 @@ final class FutureTests: XCTestCase {
     }
 
     func testResolveAfterAwaiting() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         later { future.resolve(1) }
         let value = try await future.value
         XCTAssertEqual(1, value)
     }
 
     func testFailAfterAwaiting() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         later { future.fail(TestError()) }
         do {
             let value = try await future.value
@@ -40,7 +40,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testResolvingMultipleTimesIsNoop() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         future.resolve(1)
         future.resolve(2)
         let value = try await future.value
@@ -48,7 +48,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testFailingMultipleTimesIsNoop() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         future.fail(TestError())
         future.fail(CancellationError())
         do {
@@ -60,7 +60,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testFailingAfterResolvingIsNoop() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         future.resolve(1)
         future.fail(TestError())
         let value = try await future.value
@@ -68,7 +68,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testResolvingAfterFailingIsNoop() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         future.fail(TestError())
         future.resolve(1)
         do {
@@ -80,7 +80,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testResolvingWithMultipleAwaits() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
 
         async let await1 = future.value
         async let await2 = future.value
@@ -93,7 +93,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testFailingWithMultipleAwaits() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
 
         async let await1 = future.value
         async let await2 = future.value
@@ -109,7 +109,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testResolvingWithManyAwaits() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         later(milliseconds: (1 ... 10).randomElement()!) {
             future.resolve(1)
         }
@@ -133,7 +133,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testFailingWithManyAwaits() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         later(milliseconds: (1 ... 10).randomElement()!) {
             future.fail(TestError())
         }
@@ -160,8 +160,8 @@ final class FutureTests: XCTestCase {
     }
 
     func testCancel() async throws {
-        let future = Future<Int>()
-        let didCancel = Future<Void>()
+        let future = AsyncThrowingFuture<Int>()
+        let didCancel = AsyncThrowingFuture<Void>()
 
         let task = Task {
             do {
@@ -179,7 +179,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testCancelOneAwaitAmongMany() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         let values = Locked<[Int]>([])
 
         let taskToCancel = Task {
@@ -230,7 +230,7 @@ final class FutureTests: XCTestCase {
         let didSucceed = Locked(0)
         let didFail = Locked(0)
 
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
 
         later(milliseconds: timeoutMs) { future.resolve(1) }
 
@@ -282,21 +282,21 @@ final class FutureTests: XCTestCase {
     }
 
     func testReturnValueBeforeTimeoutExpires() async throws {
-        let future = Future<Int>(timeout: 100)
+        let future = AsyncThrowingFuture<Int>(timeout: 100)
         later { future.resolve(1) }
         let value = try await future.value
         XCTAssertEqual(1, value)
     }
 
     func testTimeoutExpiresBeforeResolution() async throws {
-        let future = Future<Int>(timeout: 0.020)
+        let future = AsyncThrowingFuture<Int>(timeout: 0.020)
         guard case let .failure(error) = await future.result
         else { return XCTFail("Future should have failed") }
         XCTAssertTrue(error is TimeoutError)
     }
 
     func testTimeoutFailsAllAwaits() async throws {
-        let future = Future<Int>(timeout: 0.020)
+        let future = AsyncThrowingFuture<Int>(timeout: 0.020)
         let task1 = Task { try await future.value }
         let task2 = Task { try await future.value }
         let task3 = Task { try await future.value }
@@ -313,7 +313,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testResultWithValue() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         later { future.resolve(1) }
 
         let result = await future.result
@@ -328,7 +328,7 @@ final class FutureTests: XCTestCase {
     }
 
     func testResultWithFailure() async throws {
-        let future = Future<Int>()
+        let future = AsyncThrowingFuture<Int>()
         later { future.fail(TestError()) }
 
         let result = await future.result

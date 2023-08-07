@@ -1,7 +1,10 @@
 import Foundation
 import Synchronized
 
-public final class Future<T: Sendable>: @unchecked
+@available(*, deprecated, message: "Use AsyncThrowingFuture instead.")
+public typealias Future<T: Sendable> = AsyncThrowingFuture<T>
+
+public final class AsyncThrowingFuture<T: Sendable>: @unchecked
 Sendable {
     fileprivate typealias R = Result<T, Error>
     fileprivate typealias C = UnsafeContinuation<T, Error>
@@ -120,7 +123,7 @@ Sendable {
     }
 }
 
-public extension Future {
+public extension AsyncThrowingFuture {
     /// This method waits for the receiver to resolve
     /// or fail before returning the a `Result` containing
     /// either the resolved value or the error that caused
@@ -142,7 +145,7 @@ public extension Future {
     }}
 }
 
-public extension Future where T == Void {
+public extension AsyncThrowingFuture where T == Void {
     /// Resolves the receiver. If the future has already been
     /// resolved or failed, this is a no-op.
     func resolve() {
@@ -150,7 +153,7 @@ public extension Future where T == Void {
     }
 }
 
-private extension Future {
+private extension AsyncThrowingFuture {
     struct State {
         var result: R?
         var continuations: Cs = [:]

@@ -37,6 +37,7 @@ let package = Package(
         .target(
             name: "AsyncTestExtensions",
             dependencies: [
+                "AsyncExtensions",
                 .product(name: "Synchronized", package: "synchronized"),
             ]
         ),
