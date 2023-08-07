@@ -27,8 +27,14 @@ public extension XCTestCase {
                     return value
                 }
 
-                for try await value in group {
-                    return value
+                do {
+                    for try await value in group {
+                        group.cancelAll()
+                        return value
+                    }
+                } catch {
+                    group.cancelAll()
+                    throw error
                 }
 
                 preconditionFailure()
