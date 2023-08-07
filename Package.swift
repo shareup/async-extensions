@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.8
 import PackageDescription
 
 let package = Package(
@@ -37,6 +37,7 @@ let package = Package(
         .target(
             name: "AsyncTestExtensions",
             dependencies: [
+                "AsyncExtensions",
                 .product(name: "Synchronized", package: "synchronized"),
             ]
         ),
