@@ -25,6 +25,9 @@ The AsyncExtensions package also inlcudes the AsyncTestExtensions target, which 
 - `AssertNotNil()`
 - `AssertThrowsError()`
 - `AssertNoThrow()`
+- `XCTestCase.task()`
+- `XCTestCase.serialized()`
+- `XCTestCase.yield()`
 
 ## Installation
 
@@ -35,7 +38,7 @@ let package = Package(
   dependencies: [
     .package(
       url: "https://github.com/shareup/async-extensions.git",
-      from: "4.0.0"
+      from: "4.1.0"
     )
   ]
 )
@@ -57,3 +60,5 @@ To use AsyncTestExtensions in a test target, add it as a dependency:
 The license for AsyncExtensions is the standard MIT licence. You can find it in the LICENSE file.
 
 SequenceExtensions were heavily inspired by CollectionConcurrencyKit by John Sundell at https://github.com/JohnSundell/CollectionConcurrencyKit.
+
+The main serial executor XCTestCase extensions were taken from swift-concurrency-extras by Point-Free at https://github.com/pointfreeco/swift-concurrency-extras.
