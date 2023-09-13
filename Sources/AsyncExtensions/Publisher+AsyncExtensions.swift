@@ -127,13 +127,6 @@ private enum State {
     case terminal
     case waiting
 
-    var isTerminal: Bool {
-        guard case .terminal = self else {
-            return false
-        }
-        return true
-    }
-
     mutating func cancel() {
         switch self {
         case let .running(sub):
@@ -152,6 +145,7 @@ private enum State {
         switch self {
         case .running:
             assertionFailure()
+            break
 
         case .terminal:
             break
