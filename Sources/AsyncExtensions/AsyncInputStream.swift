@@ -19,7 +19,7 @@ public final class AsyncInputStream {
         self.init(data: data, maxChunkSize: Self.defaultMaxChunkSize)
     }
 
-    internal init(url: URL, maxChunkSize: Int) throws {
+    init(url: URL, maxChunkSize: Int) throws {
         self.maxChunkSize = maxChunkSize
 
         guard let stream = InputStream(url: url)
@@ -34,7 +34,7 @@ public final class AsyncInputStream {
         stream.open()
     }
 
-    internal init(data: Data, maxChunkSize: Int) {
+    init(data: Data, maxChunkSize: Int) {
         self.maxChunkSize = maxChunkSize
 
         let stream = InputStream(data: data)
