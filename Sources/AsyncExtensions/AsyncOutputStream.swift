@@ -141,12 +141,10 @@ public enum AsyncOutputStreamError: Error, Equatable {
     case couldNotOpenURL(URL)
 }
 
-private let queue: DispatchQueue = {
-    DispatchQueue(
-        label: "app.shareup.async-output-stream",
-        qos: .default,
-        attributes: [],
-        autoreleaseFrequency: .workItem,
-        target: .global()
-    )
-}()
+private let queue: DispatchQueue = .init(
+    label: "app.shareup.async-output-stream",
+    qos: .default,
+    attributes: [],
+    autoreleaseFrequency: .workItem,
+    target: .global()
+)

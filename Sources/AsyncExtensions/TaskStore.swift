@@ -167,7 +167,7 @@ private struct State {
 
     mutating func cancelAll(where shouldBeRemoved: (String) -> Bool) {
         let keys = Array(tasks.keys)
-        keys.forEach { key in
+        for key in keys {
             if shouldBeRemoved(key) {
                 tasks.removeValue(forKey: key)?()
             }

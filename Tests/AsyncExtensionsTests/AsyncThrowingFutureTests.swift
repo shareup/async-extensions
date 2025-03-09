@@ -152,9 +152,9 @@ final class AsyncThrowingFutureTests: XCTestCase {
         XCTAssertEqual(count, results.count)
         XCTAssertTrue(results.allSatisfy { result in
             if case let .failure(error) = result {
-                return error is TestError
+                error is TestError
             } else {
-                return false
+                false
             }
         })
     }
@@ -235,7 +235,7 @@ final class AsyncThrowingFutureTests: XCTestCase {
         later(milliseconds: timeoutMs) { future.resolve(1) }
 
         try await withThrowingTaskGroup(of: Void.self) { group in
-            (0 ..< count).forEach { _ in
+            for _ in 0 ..< count {
                 if Bool.random() {
                     // This task will probably be cancelled
                     group.addTask {

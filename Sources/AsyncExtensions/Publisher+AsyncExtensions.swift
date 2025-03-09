@@ -145,7 +145,6 @@ private enum State {
         switch self {
         case .running:
             assertionFailure()
-            break
 
         case .terminal:
             break
