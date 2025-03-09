@@ -71,12 +71,12 @@ private extension AsyncOutputStreamTests {
 
     func append(_ pathComponent: String, to url: URL) -> URL {
         if #available(macOS 13.0, *) {
-            return url.appending(
+            url.appending(
                 path: pathComponent,
                 directoryHint: .inferFromPath
             )
         } else {
-            return url.appendingPathComponent(
+            url.appendingPathComponent(
                 pathComponent,
                 isDirectory: pathComponent.hasSuffix("/")
             )
